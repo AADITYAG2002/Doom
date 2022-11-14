@@ -5,35 +5,35 @@ class RayCasting:
     def __init__(self,game):
         self.game = game
         self.ray_casting_result = []
-        self.objects_to_render = []
-        self.textures = self.game.object_renderer.wall_textures
+        # self.objects_to_render = []
+        # self.textures = self.game.object_renderer.wall_textures
 
-    def get_objects_to_render(self):
-        self.objects_to_render = []
-        for ray,values in enumerate(self.ray_casting_result):
-            depth, proj_height, texture, offset = values
+    # def get_objects_to_render(self):
+    #     self.objects_to_render = []
+    #     for ray,values in enumerate(self.ray_casting_result):
+    #         depth, proj_height, texture, offset = values
 
-            # wall_column = self.textures[texture].subsurface(
-            #     offset * (TEXTURE_SIZE - SCALE), 0, SCALE, TEXTURE_SIZE
-            # )
-            # wall_column = pygame.transform.scale(wall_column,(SCALE,proj_height))
-            # wall_pos = (ray*SCALE,HALF_HEIGHT-proj_height // 2)
-            if proj_height < HEIGHT:
-                wall_column = self.textures[texture].subsurface(
-                    offset * (TEXTURE_SIZE - SCALE), 0, SCALE, TEXTURE_SIZE
-                )
-                wall_column = pygame.transform.scale(wall_column, (SCALE, proj_height))
-                wall_pos = (ray * SCALE, HALF_HEIGHT - proj_height // 2)
-            else:
-                texture_height = TEXTURE_SIZE * HEIGHT / proj_height
-                wall_column = self.textures[texture].subsurface(
-                    offset * (TEXTURE_SIZE - SCALE), HALF_TEXTURE_SIZE - texture_height // 2,
-                    SCALE, texture_height
-                )
-                wall_column = pygame.transform.scale(wall_column, (SCALE, HEIGHT))
-                wall_pos = (ray * SCALE, 0)
+    #         # wall_column = self.textures[texture].subsurface(
+    #         #     offset * (TEXTURE_SIZE - SCALE), 0, SCALE, TEXTURE_SIZE
+    #         # )
+    #         # wall_column = pygame.transform.scale(wall_column,(SCALE,proj_height))
+    #         # wall_pos = (ray*SCALE,HALF_HEIGHT-proj_height // 2)
+    #         if proj_height < HEIGHT:
+    #             wall_column = self.textures[texture].subsurface(
+    #                 offset * (TEXTURE_SIZE - SCALE), 0, SCALE, TEXTURE_SIZE
+    #             )
+    #             wall_column = pygame.transform.scale(wall_column, (SCALE, proj_height))
+    #             wall_pos = (ray * SCALE, HALF_HEIGHT - proj_height // 2)
+    #         else:
+    #             texture_height = TEXTURE_SIZE * HEIGHT / proj_height
+    #             wall_column = self.textures[texture].subsurface(
+    #                 offset * (TEXTURE_SIZE - SCALE), HALF_TEXTURE_SIZE - texture_height // 2,
+    #                 SCALE, texture_height
+    #             )
+    #             wall_column = pygame.transform.scale(wall_column, (SCALE, HEIGHT))
+    #             wall_pos = (ray * SCALE, 0)
 
-            self.objects_to_render.append((depth,wall_column,wall_pos))
+    #         self.objects_to_render.append((depth,wall_column,wall_pos))
 
     def ray_cast(self):
         self.ray_casting_result = []
@@ -85,24 +85,22 @@ class RayCasting:
 
             #depth, texture
             if depth_vert < depth_hor:
-                depth, texture = depth_vert, texture_vert
-                y_vert %= 1
-                offset = y_vert if cos_a > 0 else (1-y_vert)
+                depth = depth_vert
             else:
-                depth, texture = depth_hor, texture_hor
-                x_hor %= 1
-                offset = (1 - y_hor) if sin_a > 0 else x_hor
+                depth = depth_hor
             
             #remove fishbowl
             depth *= math.cos(self.game.player.angle - ray_angle)
             #projections
             proj_height = SCREEN_DIST / (depth + 0.0001)
 
-            #ray casting result
-            self.ray_casting_result.append((depth,proj_height,texture,offset))
+            #draw walls
+            color = [255 / (1 + depth ** 5 * 0.00002)] * 3
+            pygame.draw.rect(self.game.screen,color,
+                        (ray * SCALE, HALF_HEIGHT - proj_height // 2,SCALE,proj_height))
 
             ray_angle += DELTA_ANGLE
 
     def update(self):
         self.ray_cast()
-        self.get_objects_to_render()
+        #self.get_objects_to_render()
